@@ -73,3 +73,8 @@ def test_load_save_reload(path: os.PathLike):
 def test_pprint():
     configs = mlc.from_dict(valid_dict)
     mlc.pprint(configs)
+
+def test_frozen():
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        configs = mlc.from_dict(valid_dict)
+        configs.int = 2
