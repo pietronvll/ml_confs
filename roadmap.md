@@ -1,0 +1,19 @@
+## `ml_confs` roadmap
+- [x] Use (ordered) dict as a low level storage for configurations
+- [x] Checks to be satisfied on the low level storage:
+  - [x] No nested structure
+  - [x] No duplicate keys
+  - [x] Accepting only fixed typed:
+    - `int`
+    - `float`
+    - `complex`?
+    - `str`
+    - `bool`
+    - A `list` of any of the above
+    - `null`
+  - [ ] Dynamically create dataclasses associated to this structure (so that the fields can be accessed with dot notation)
+  - [ ] Input - Output
+    - [ ] Load and save from/to `json` file
+    - [ ] Load and save from/to `yaml` file
+    - [ ] Create and export from/to ordinary `dict`
+  - [ ] Add a flag to make them `flax/jax` compatible

@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ml_confs"
+version = "0.0.1"
+authors = [
+  { name="Pietro Novelli", email="pietronvll@gmail.com" },
+]
+description = "A utility to handle configurations for machine learning pipelines"
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pyyaml"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/Pietronvll/ml_confs"
