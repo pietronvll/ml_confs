@@ -17,3 +17,4 @@
     - [x] Load and save from/to `yaml` file
     - [x] Create and export from/to ordinary `dict`
   - [x] Add a flag to make them `flax/jax` compatible
+  - [ ] Add unit tests for `flax`
