@@ -9,11 +9,11 @@
     - `complex`?
     - `str`
     - `bool`
-    - A `list` of any of the above
+    - A `list` with _all_ of its elements types being any of the above
     - `null`
-  - [ ] Dynamically create dataclasses associated to this structure (so that the fields can be accessed with dot notation)
-  - [ ] Input - Output
-    - [ ] Load and save from/to `json` file
-    - [ ] Load and save from/to `yaml` file
-    - [ ] Create and export from/to ordinary `dict`
-  - [ ] Add a flag to make them `flax/jax` compatible
+  - [x] Dynamically create dataclasses associated to this structure (so that the fields can be accessed with dot notation)
+  - [x] Input - Output
+    - [x] Load and save from/to `json` file
+    - [x] Load and save from/to `yaml` file
+    - [x] Create and export from/to ordinary `dict`
+  - [x] Add a flag to make them `flax/jax` compatible

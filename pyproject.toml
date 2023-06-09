@@ -16,7 +16,13 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pyyaml"
+    "pyyaml>=6.0",
+    "rich>=13.0"
+]
+
+[project.optional-dependencies]
+flax = [
+    "flax>=0.6.10"
 ]
 
 [project.urls]

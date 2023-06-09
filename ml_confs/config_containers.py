@@ -1,60 +1,55 @@
-import json
 import dataclasses
 import types
-from collections import UserDict
 from typing import Mapping
+from copy import deepcopy
 
 allowed_types = (int, float, str, bool, type(None))
 allowed_iterables = (list, )
 
-def check_structure(mapping: Mapping) -> bool:
+class InvalidStructureError(Exception):
+    pass
+class BaseConfigs():
+    pass
+
+def check_structure(mapping: Mapping):
     seen = set()
     for key, value in mapping.items():
         if not isinstance(key, str):
-            return False
+            raise InvalidStructureError('Keys must be strings')
         if key in seen:
-            return False
+            raise InvalidStructureError('Duplicate keys are not allowed')
         seen.add(key)
         if isinstance(value, allowed_types):
             continue
         if isinstance(value, allowed_iterables):
+            seen_types = set()
             for item in value:
                 if not isinstance(item, allowed_types):
-                    return False
+                    raise InvalidStructureError('Element types must be one of: {}'.format(allowed_types))
+                seen_types.add(type(item))
+            if len(seen_types) > 1:
+                raise InvalidStructureError('Lists must be homogenous')
             continue
-        return False
-    return True
+        raise InvalidStructureError('Element types must be one of: {}'.format(allowed_types))  
 
-class InvalidStructureError(Exception):
-    pass
-
-class ConfStorage(UserDict):
-    def __init__(self, *args, **kwargs):
-        UserDict.__init__(self, *args, **kwargs)
-        if not check_structure(self.data):
-            error_message = """
-                Invalid configuration:
-                - keys must be strings
-                - values must be one of the following types: int, float, str, bool, None
-                - no nested structures are allowed except for lists of the above types
-                - no duplicate keys are allowed
-            """
-            raise InvalidStructureError(error_message)
-
-def make_base_config_class(storage: ConfStorage):
+def make_base_config_class(storage: dict, flax_dataclass: bool = False):
+    check_structure(storage)
     defaults = {}
     annotations = {}
-    for key, value in storage.data.items():
-        defaults[key] = dataclasses.field(default=value, metadata={'pytree_node': False})
+    for key, value in storage.items():
         annotations[key] = type(value)
-    defaults['_storage'] = dataclasses.field(default = storage, metadata={'pytree_node': False})
-    annotations['_storage'] = ConfStorage
+    annotations['_storage'] = dict
     def exec_body_callback(ns):
         ns.update(defaults)
         ns['__annotations__'] = annotations
-    cls = types.new_class('BaseConfig', (), {}, exec_body_callback)
-    return cls
-
-def init_base_config_class(cls, storage: ConfStorage):
-    cls._storage = storage
-    return cls        
+    cls = types.new_class('Configs', (BaseConfigs,), {}, exec_body_callback)
+    if flax_dataclass:
+        try:
+            from flax import struct
+            cls = struct.dataclass(cls)
+        except ImportError:
+            print('Warning: flax is not installed, falling back to dataclasses')
+    else:
+        cls = dataclasses.dataclass(cls, frozen=True)
+    storage['_storage'] = deepcopy(storage)
+    return cls(**storage)
