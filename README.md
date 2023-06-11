@@ -29,6 +29,12 @@ configs = mlcfg.from_file('configs.yml')
 #Accessing configs with dot notation
 print(configs.int_field) # >>> 1
 
+#Additionally, one can use the ** notation to unpack the configurations
+def foo(**kwargs):
+    # Do stuff...
+foo(**configs)
+
+
 #Saving configs to json format
 mlcfg.to_file('json_configs_copy.json') #Will create a .json file 
 ```
@@ -48,9 +54,6 @@ One can also pretty print a loaded configuration with `ml_confs.pprint`, which i
 ```
 ## API reference
 <!-- markdownlint-disable -->
-
-# API reference
-
 <a href="https://github.com/Pietronvll/ml_confs/tree/main/ml_confs/io_utils.py#L17"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `from_json`
