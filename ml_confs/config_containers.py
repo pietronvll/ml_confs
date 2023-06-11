@@ -1,6 +1,6 @@
 import dataclasses
 import types
-from typing import Mapping
+from collections.abc import Mapping
 from copy import deepcopy
 
 allowed_types = (int, float, str, bool, type(None))
@@ -8,8 +8,16 @@ allowed_iterables = (list, )
 
 class InvalidStructureError(Exception):
     pass
-class BaseConfigs():
-    pass
+
+class BaseConfigs(Mapping):
+    def __getitem__(self, key):
+        return self._storage[key]
+    def __iter__(self):
+        return iter(self._storage)
+    def __len__(self):
+        return len(self._storage)
+    def __contains__(self, key):
+        return key in self._storage[key]
 
 def check_structure(mapping: Mapping):
     seen = set()

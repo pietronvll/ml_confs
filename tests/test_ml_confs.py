@@ -78,3 +78,9 @@ def test_frozen():
     with pytest.raises(dataclasses.FrozenInstanceError):
         configs = mlc.from_dict(valid_dict)
         configs.int = 2
+
+def test_starstar():
+    configs = mlc.from_dict(valid_dict)
+    def foo(**kwargs):
+        assert kwargs == valid_dict
+    foo(**configs)

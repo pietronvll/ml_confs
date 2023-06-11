@@ -1,8 +1,8 @@
 # ML configurations
-A small, highly opinionated library to handle configurations used in machine learning pipelines.
-The library can load configurations from both `json`, `yaml` and standard python dictionaries.
+A small, highly opinionated `python` tool to handle configurations for machine learning pipelines.
+The library is designed to load configurations from both `json` and `yaml` files, as well as from standard python dictionaries.
 ## Design rules
-The configurations, once loaded are frozen. Each configuration file can contain only `int`, `float`, `str`, `bool` and `None` fields, as well as _homogeneous_ lists of one of the same types. That is it. No nested structures are allowed.
+The configurations, once loaded are frozen. Each configuration file can contain only `int`, `float`, `str`, `bool` and `None` fields, as well as _homogeneous_ lists of one of the same types. That's all. No nested structures are allowed.
 ## Installation
 ML configurations can be installed directly from `git` by running
 ```

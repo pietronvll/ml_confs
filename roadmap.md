@@ -17,6 +17,6 @@
     - [x] Load and save from/to `yaml` file
     - [x] Create and export from/to ordinary `dict`
   - [x] Add a flag to make them `flax/jax` compatible
-  - [ ] Add unit tests for `flax`
+  - [x] Add unit tests for `flax`
   - [x] Update `readme.md`
-  - [ ] Add the `**cfg` syntax 
+  - [x] Add support for the `**cfg` syntax 
