@@ -5,8 +5,22 @@ from rich.console import Console
 from rich.table import Table
 from pathlib import Path
 from copy import deepcopy
+import re
 
 from ml_confs.config_containers import BaseConfigs, make_base_config_class
+
+#Fix for yaml scientific notation https://stackoverflow.com/questions/30458977/yaml-loads-5e-6-as-string-and-not-a-number
+loader = yaml.SafeLoader
+loader.add_implicit_resolver(
+    u'tag:yaml.org,2002:float',
+    re.compile(u'''^(?:
+     [-+]?(?:[0-9][0-9_]*)\\.[0-9_]*(?:[eE][-+]?[0-9]+)?
+    |[-+]?(?:[0-9][0-9_]*)(?:[eE][-+]?[0-9]+)
+    |\\.[0-9_]+(?:[eE][-+][0-9]+)?
+    |[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*
+    |[-+]?\\.(?:inf|Inf|INF)
+    |\\.(?:nan|NaN|NAN))$''', re.X),
+    list(u'-+0123456789.'))
 
 def create_base_dir(path: os.PathLike):
     path = Path(path)
@@ -39,7 +53,7 @@ def from_yaml(path: os.PathLike, flax_dataclass: bool = False):
         Configs: Instance of the loaded configurations.
     """    
     with open(path, 'r') as f:
-        storage = yaml.safe_load(f)
+        storage = yaml.load(f, Loader=loader)
     return make_base_config_class(storage, flax_dataclass)
 
 def from_dict(storage: dict, flax_dataclass: bool = False):
