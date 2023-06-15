@@ -17,7 +17,7 @@ class BaseConfigs(Mapping):
     def __len__(self):
         return len(self._storage)
     def __contains__(self, key):
-        return key in self._storage[key]
+        return key in self._storage
 
 def check_structure(mapping: Mapping):
     seen = set()
