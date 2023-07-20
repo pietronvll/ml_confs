@@ -6,7 +6,7 @@ The configurations, once loaded are frozen. Each configuration file can contain 
 ## Installation
 ML configurations can be installed directly from `git` by running
 ```
-pip install git+https://github.com/Pietronvll/ml_confs.git
+pip install ml-confs
 ```
 
 ## Basic usage
