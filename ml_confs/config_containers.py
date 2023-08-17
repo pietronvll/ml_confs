@@ -2,6 +2,7 @@ import dataclasses
 import types
 from collections.abc import Mapping
 from copy import deepcopy
+import sys
 
 allowed_types = (int, float, str, bool, type(None))
 allowed_iterables = (list, )
@@ -22,20 +23,20 @@ class Configs(Mapping):
         if not isinstance(other, Configs):            
             return False
         return (self._storage == other._storage) and (self._is_jax_pytree == other._is_jax_pytree)
-    
+
+class PytreeConfigs(Configs):    
     #JAX pytree compatibility
     def tree_flatten(self):
-        return tuple(self._storage.values()), tuple(self._storage.keys()) + (self._is_jax_pytree,)
+        return tuple(self._storage.values()), tuple(self._storage.keys())
     
     @classmethod
     def tree_unflatten(cls, aux_data, children):
         #Pop last element from aux_data
-        _is_jax_pytree = aux_data[-1]
-        aux_data = aux_data[:-1]
         storage = dict(zip(aux_data, children))
-        return make_base_config_class(storage, _is_jax_pytree)
+        return make_base_config_class(storage, register_jax_pytree=True)
 
-def check_structure(mapping: Mapping, _jax_tracer: bool = False):
+
+def check_structure(mapping: Mapping, _ignore_jax_tracers: bool = False):
     seen = set()
     for key, value in mapping.items():
         if not isinstance(key, str):
@@ -55,20 +56,28 @@ def check_structure(mapping: Mapping, _jax_tracer: bool = False):
                 raise InvalidStructureError('Lists must be homogenous')
             continue
 
-        if _jax_tracer:
+        if _ignore_jax_tracers:
             try:
                 from jax.core import Tracer
             except ImportError:
-                raise ImportError('The argument `_jax_tracer` is not supported without JAX installed')
+                raise ImportError('The argument `_ignore_jax_tracers` is not supported without JAX installed')
             if isinstance(value, Tracer):
                 continue
+        
         error_str = f"The element {key} is of type {type(value)} while it must be one of:\n"
         for t in allowed_types:
             error_str += f"\t{t.__name__}\n"
         raise InvalidStructureError(error_str)  
 
 def make_base_config_class(storage: dict, register_jax_pytree: bool = False):
-    check_structure(storage, register_jax_pytree)
+
+    #JAX pytree compatibility
+    if register_jax_pytree:
+        _ignore_jax_tracers = True
+    else:
+        _ignore_jax_tracers = False
+    
+    check_structure(storage, _ignore_jax_tracers=_ignore_jax_tracers)
     defaults = {}
     annotations = {}
     for key, value in storage.items():
@@ -78,16 +87,23 @@ def make_base_config_class(storage: dict, register_jax_pytree: bool = False):
     def exec_body_callback(ns):
         ns.update(defaults)
         ns['__annotations__'] = annotations
-    cls = types.new_class('LoadedConfigs', (Configs,), {}, exec_body_callback)
-    cls = dataclasses.dataclass(cls, frozen=True, eq=False)
+
     storage['_storage'] = deepcopy(storage)
-    if register_jax_pytree:
+    if register_jax_pytree:    
+        cls = types.new_class('LoadedConfigs', (PytreeConfigs,), {}, exec_body_callback)
+        cls = dataclasses.dataclass(cls, frozen=True, eq=False)
         try:
             from jax.tree_util import register_pytree_node_class
             cls = register_pytree_node_class(cls)
             storage['_is_jax_pytree'] = True
         except ImportError:
-            print('Warning: unable to import JAX. The argument `register_jax_pytree` will be ignored.')
+            print('Unable to import JAX. The argument `register_jax_pytree` will be ignored.', file=sys.stderr)
+            cls = types.new_class('LoadedConfigs', (Configs,), {}, exec_body_callback)
+            cls = dataclasses.dataclass(cls, frozen=True, eq=False)
+            storage['_is_jax_pytree'] = False
     else:
+        cls = types.new_class('LoadedConfigs', (Configs,), {}, exec_body_callback)
+        cls = dataclasses.dataclass(cls, frozen=True, eq=False)
         storage['_is_jax_pytree'] = False
+    
     return cls(**storage)

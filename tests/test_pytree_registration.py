@@ -11,10 +11,13 @@ configs_path = tests_path / 'test_configs/valid_conf.yaml'
 @pytest.mark.parametrize('register_jax_pytree', [True, False])
 def test_tree_properties(register_jax_pytree):
     configs = mlc.from_file(configs_path, register_jax_pytree=register_jax_pytree)
-    childs, aux = configs.tree_flatten()
-    assert len(childs) + 1 == len(aux)
-    assert aux[-1] == register_jax_pytree # _is_jax_pytree
-    assert dict(zip(aux[:-1], childs)) == configs._storage
+    if register_jax_pytree:     
+        childs, aux = configs.tree_flatten()
+        assert len(childs) == len(aux)
+        assert dict(zip(aux, childs)) == configs._storage
+    else: 
+        with pytest.raises(AttributeError):
+            configs.tree_flatten()
 
 def test_tree_flatten_unflatten():
     configs = mlc.from_file(configs_path, register_jax_pytree=True)
