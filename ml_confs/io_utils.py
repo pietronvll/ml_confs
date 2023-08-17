@@ -5,6 +5,7 @@ from rich.console import Console
 from rich.table import Table
 from pathlib import Path
 from copy import deepcopy
+import msgpack
 import re
 
 from ml_confs.config_containers import Configs, make_base_config_class
@@ -28,8 +29,9 @@ def create_base_dir(path: os.PathLike):
     if not base_path.exists():
         base_path.mkdir(parents=True)
 
-def from_msgpack(path: os.PathLike, register_jax_pytree: bool = False):
-    raise NotImplementedError
+def from_msgpack(msgpack_bytes, register_jax_pytree: bool = False):
+    storage = msgpack.unpackb(msgpack_bytes, raw=False)
+    return make_base_config_class(storage, register_jax_pytree)
 
 def from_json(path: os.PathLike, register_jax_pytree: bool = False):
     """Load configurations from a JSON file.
@@ -142,8 +144,8 @@ def to_dict(configs: Configs) -> dict:
     """    
     return configs._storage
 
-def to_msgpack(path: os.PathLike, configs: Configs):
-    raise NotImplementedError
+def to_msgpack(configs: Configs):
+    return msgpack.packb(configs._storage)
 
 def pprint(configs: Configs):
     """Pretty print configurations.
