@@ -7,7 +7,7 @@ from pathlib import Path
 from copy import deepcopy
 import re
 
-from ml_confs.config_containers import BaseConfigs, make_base_config_class
+from ml_confs.config_containers import Configs, make_base_config_class
 
 #Fix for yaml scientific notation https://stackoverflow.com/questions/30458977/yaml-loads-5e-6-as-string-and-not-a-number
 loader = yaml.SafeLoader
@@ -28,71 +28,74 @@ def create_base_dir(path: os.PathLike):
     if not base_path.exists():
         base_path.mkdir(parents=True)
 
-def from_json(path: os.PathLike, flax_dataclass: bool = False):
+def from_msgpack(path: os.PathLike, register_jax_pytree: bool = False):
+    raise NotImplementedError
+
+def from_json(path: os.PathLike, register_jax_pytree: bool = False):
     """Load configurations from a JSON file.
 
     Args:
         path (os.PathLike): Configuration file path.
-        flax_dataclass (bool, optional): Returns a flax compatible object. Uses flax.struct.dataclass. Defaults to False.
+        register_jax_pytree (bool, optional): Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations.. Defaults to False.
 
     Returns:
         Configs: Instance of the loaded configurations.
     """
     with open(path, 'r') as f:
         storage = json.load(f)
-    return make_base_config_class(storage, flax_dataclass)
+    return make_base_config_class(storage, register_jax_pytree)
 
-def from_yaml(path: os.PathLike, flax_dataclass: bool = False):
+def from_yaml(path: os.PathLike, register_jax_pytree: bool = False):
     """Load configurations from a YAML file.
 
     Args:
         path (os.PathLike): Configuration file path.
-        flax_dataclass (bool, optional): Returns a flax compatible object. Uses flax.struct.dataclass. Defaults to False.
+        register_jax_pytree (bool, optional): Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations.. Defaults to False.
 
     Returns:
         Configs: Instance of the loaded configurations.
     """    
     with open(path, 'r') as f:
         storage = yaml.load(f, Loader=loader)
-    return make_base_config_class(storage, flax_dataclass)
+    return make_base_config_class(storage, register_jax_pytree)
 
-def from_dict(storage: dict, flax_dataclass: bool = False):
+def from_dict(storage: dict, register_jax_pytree: bool = False):
     """Load configurations from a python dictionary.
 
     Args:
         storage (dict): Configuration dictionary.
-        flax_dataclass (bool, optional): Returns a flax compatible object. Uses flax.struct.dataclass. Defaults to False.
+        register_jax_pytree (bool, optional): Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations.. Defaults to False.
 
     Returns:
         Configs: Instance of the loaded configurations.
     """
     storage = deepcopy(storage)
-    return make_base_config_class(storage, flax_dataclass)
+    return make_base_config_class(storage, register_jax_pytree)
 
-def from_file(path: os.PathLike, flax_dataclass: bool = False):
+def from_file(path: os.PathLike, register_jax_pytree: bool = False):
     """Load configurations from a YAML/JSON file.
 
     Args:
         path (os.PathLike): Configuration file path.
-        flax_dataclass (bool, optional): Returns a flax compatible object. Uses flax.struct.dataclass. Defaults to False.
+        register_jax_pytree (bool, optional): Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations.. Defaults to False.
 
     Returns:
         Configs: Instance of the loaded configurations.
     """
     path = str(path)
     if path.endswith('.json'):
-        return from_json(path, flax_dataclass)
+        return from_json(path, register_jax_pytree)
     elif path.endswith('.yaml') or path.endswith('.yml'):
-        return from_yaml(path, flax_dataclass)
+        return from_yaml(path, register_jax_pytree)
     else:
         raise ValueError('File extension must be one of: .json, .yaml, .yml')
 
-def to_json(path: os.PathLike, configs: BaseConfigs):
+def to_json(path: os.PathLike, configs: Configs):
     """Save configurations to a JSON file.
 
     Args:
         path (os.PathLike): File path to save the configurations.
-        configs (BaseConfigs): Instance of the configurations.
+        configs (Configs): Instance of the configurations.
     """    
     path = str(path)
     assert path.endswith('.json'), 'File extension must be .json'
@@ -100,12 +103,12 @@ def to_json(path: os.PathLike, configs: BaseConfigs):
     with open(path, 'w') as f:
         json.dump(configs._storage, f, indent=4)
 
-def to_yaml(path: os.PathLike, configs: BaseConfigs):
+def to_yaml(path: os.PathLike, configs: Configs):
     """Save configurations to a YAML file.
 
     Args:
         path (os.PathLike): File path to save the configurations.
-        configs (BaseConfigs): Instance of the configurations.
+        configs (Configs): Instance of the configurations.
     """
     path = str(path)
     assert path.endswith('.yaml') or path.endswith('.yml'), 'File extension must be .yaml or .yml'
@@ -113,12 +116,12 @@ def to_yaml(path: os.PathLike, configs: BaseConfigs):
     with open(path, 'w') as f:
         yaml.safe_dump(configs._storage, f)
 
-def to_file(path: os.PathLike, configs: BaseConfigs):
+def to_file(path: os.PathLike, configs: Configs):
     """Save configurations to a YAML/JSON file.
 
     Args:
         path (os.PathLike): File path to save the configurations.
-        configs (BaseConfigs): Instance of the configurations.
+        configs (Configs): Instance of the configurations.
     """
     path = str(path)
     if path.endswith('.json'):
@@ -128,22 +131,25 @@ def to_file(path: os.PathLike, configs: BaseConfigs):
     else:
         raise ValueError('File extension must be one of: .json, .yaml, .yml')
 
-def to_dict(configs: BaseConfigs) -> dict:
+def to_dict(configs: Configs) -> dict:
     """Export configurations to a python dictionary.
 
     Args:
-        configs (BaseConfigs): Instance of the configurations.
+        configs (Configs): Instance of the configurations.
 
     Returns:
         dict: A standard python dictionary containing the configurations.
     """    
     return configs._storage
 
-def pprint(configs: BaseConfigs):
+def to_msgpack(path: os.PathLike, configs: Configs):
+    raise NotImplementedError
+
+def pprint(configs: Configs):
     """Pretty print configurations.
 
     Args:
-        configs (BaseConfigs): An instance of the configurations.
+        configs (Configs): An instance of the configurations.
     """    
     console = Console()
     table = Table(show_header=True, header_style="bold")

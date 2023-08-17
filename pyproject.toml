@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ml_confs"
-version = "0.0.1"
+version = "0.0.1a"
 authors = [
   { name="Pietro Novelli", email="pietronvll@gmail.com" },
 ]
@@ -17,11 +17,19 @@ classifiers = [
 ]
 dependencies = [
     "pyyaml>=6.0",
-    "rich>=13.0"
+    "rich>=13.0",
+    "msgpack"
 ]
 [project.optional-dependencies]
-flax = [
-    "flax>=0.6.10"
+jax = [
+    "jax",
+    "jaxlib"  
+]
+
+dev = [
+    "pytest",
+    "jax",
+    "jaxlib"
 ]
 
 [project.urls]

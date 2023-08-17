@@ -7,4 +7,4 @@ from ml_confs.io_utils import to_dict
 from ml_confs.io_utils import to_file
 from ml_confs.io_utils import to_json
 from ml_confs.io_utils import to_yaml
-from ml_confs.config_containers import BaseConfigs
+from ml_confs.config_containers import Configs
