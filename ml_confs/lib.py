@@ -5,10 +5,154 @@ from rich.console import Console
 from rich.table import Table
 from pathlib import Path
 from copy import deepcopy
-import msgpack
 import re
+import dataclasses
+import types
+from collections.abc import Mapping
+import sys
 
-from ml_confs.config_containers import Configs, make_base_config_class
+allowed_types = (int, float, str, bool, type(None))
+allowed_iterables = (list, )
+
+class InvalidStructureError(Exception):
+    pass
+
+class Configs(Mapping):
+    def __getitem__(self, key):
+        return self._storage[key]
+    def __iter__(self):
+        return iter(self._storage)
+    def __len__(self):
+        return len(self._storage)
+    def __contains__(self, key):
+        return key in self._storage
+    def __eq__(self, other):
+        if not isinstance(other, Configs):            
+            return False
+        return (self._storage == other._storage) and (self._is_jax_pytree == other._is_jax_pytree)
+    
+    def to_dict(self) -> dict:
+        """Export configurations to a python dictionary.
+        
+        Returns:
+            dict: A standard python dictionary containing the configurations.
+        """
+        return self._storage
+    
+    def to_json(self, path: os.PathLike):
+        """Save configurations to a JSON file.
+        
+        Args:
+            path (os.PathLike): File path to save the configurations.
+        """        
+        to_json(path, self)
+    
+    def to_yaml(self, path: os.PathLike):
+        """Save configurations to a YAML file.
+        
+        Args:
+            path (os.PathLike): File path to save the configurations.
+        """        
+        to_yaml(path, self)
+    
+    def to_file(self, path: os.PathLike):
+        """Save configurations to a YAML/JSON file.
+        
+        Args:
+            path (os.PathLike): File path to save the configurations.
+        """        
+        to_file(path, self)
+    
+    def tabulate(self):
+        """
+        Print the configurations in a tabular format.
+        """        
+        pprint(self)
+
+class PytreeConfigs(Configs):    
+    #JAX pytree compatibility
+    def tree_flatten(self):
+        return tuple(self._storage.values()), tuple(self._storage.keys())
+    
+    @classmethod
+    def tree_unflatten(cls, aux_data, children):
+        #Pop last element from aux_data
+        storage = dict(zip(aux_data, children))
+        return make_base_config_class(storage, register_jax_pytree=True)
+
+
+def check_structure(mapping: Mapping, _ignore_jax_tracers: bool = False):
+    seen = set()
+    for key, value in mapping.items():
+        if not isinstance(key, str):
+            raise InvalidStructureError('Keys must be strings')
+        if key in seen:
+            raise InvalidStructureError('Duplicate keys are not allowed')
+        seen.add(key)
+        if isinstance(value, allowed_types):
+            continue
+        if isinstance(value, allowed_iterables):
+            seen_types = set()
+            for item in value:
+                if not isinstance(item, allowed_types):
+                    raise InvalidStructureError('Element types must be one of: {}'.format(allowed_types))
+                seen_types.add(type(item))
+            if len(seen_types) > 1:
+                raise InvalidStructureError('Lists must be homogenous')
+            continue
+
+        if _ignore_jax_tracers:
+            try:
+                from jax.core import Tracer
+            except ImportError:
+                raise ImportError('The argument `_ignore_jax_tracers` is not supported without JAX installed')
+            if isinstance(value, Tracer):
+                continue
+        
+        error_str = f"The element {key} is of type {type(value)} while it must be one of:\n"
+        for t in allowed_types:
+            error_str += f"\t{t.__name__}\n"
+        raise InvalidStructureError(error_str)  
+
+def make_base_config_class(storage: dict, register_jax_pytree: bool = False):
+
+    #JAX pytree compatibility
+    if register_jax_pytree:
+        _ignore_jax_tracers = True
+    else:
+        _ignore_jax_tracers = False
+    
+    check_structure(storage, _ignore_jax_tracers=_ignore_jax_tracers)
+    defaults = {}
+    annotations = {}
+    for key, value in storage.items():
+        annotations[key] = type(value)
+    annotations['_storage'] = dict
+    annotations['_is_jax_pytree'] = bool
+    def exec_body_callback(ns):
+        ns.update(defaults)
+        ns['__annotations__'] = annotations
+
+    storage['_storage'] = deepcopy(storage)
+    if register_jax_pytree:    
+        cls = types.new_class('LoadedConfigs', (PytreeConfigs,), {}, exec_body_callback)
+        cls = dataclasses.dataclass(cls, frozen=True, eq=False)
+        try:
+            from jax.tree_util import register_pytree_node_class
+            cls = register_pytree_node_class(cls)
+            storage['_is_jax_pytree'] = True
+        except ImportError:
+            print('Unable to import JAX. The argument `register_jax_pytree` will be ignored.', file=sys.stderr)
+            cls = types.new_class('LoadedConfigs', (Configs,), {}, exec_body_callback)
+            cls = dataclasses.dataclass(cls, frozen=True, eq=False)
+            storage['_is_jax_pytree'] = False
+    else:
+        cls = types.new_class('LoadedConfigs', (Configs,), {}, exec_body_callback)
+        cls = dataclasses.dataclass(cls, frozen=True, eq=False)
+        storage['_is_jax_pytree'] = False
+    
+    return cls(**storage)
+
 
 #Fix for yaml scientific notation https://stackoverflow.com/questions/30458977/yaml-loads-5e-6-as-string-and-not-a-number
 loader = yaml.SafeLoader
@@ -28,10 +172,6 @@ def create_base_dir(path: os.PathLike):
     base_path = path.parent
     if not base_path.exists():
         base_path.mkdir(parents=True)
-
-def from_msgpack(msgpack_bytes, register_jax_pytree: bool = False):
-    storage = msgpack.unpackb(msgpack_bytes, raw=False)
-    return make_base_config_class(storage, register_jax_pytree)
 
 def from_json(path: os.PathLike, register_jax_pytree: bool = False):
     """Load configurations from a JSON file.
@@ -143,9 +283,6 @@ def to_dict(configs: Configs) -> dict:
         dict: A standard python dictionary containing the configurations.
     """    
     return configs._storage
-
-def to_msgpack(configs: Configs):
-    return msgpack.packb(configs._storage)
 
 def pprint(configs: Configs):
     """Pretty print configurations.

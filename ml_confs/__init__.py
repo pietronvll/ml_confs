@@ -1,10 +1,1 @@
-from ml_confs.io_utils import from_dict
-from ml_confs.io_utils import from_file
-from ml_confs.io_utils import from_json
-from ml_confs.io_utils import from_yaml
-from ml_confs.io_utils import pprint
-from ml_confs.io_utils import to_dict
-from ml_confs.io_utils import to_file
-from ml_confs.io_utils import to_json
-from ml_confs.io_utils import to_yaml
-from ml_confs.config_containers import Configs
+from ml_confs.lib import Configs, from_dict, from_json, from_yaml, from_file

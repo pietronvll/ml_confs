@@ -2,7 +2,7 @@ import os
 import pytest
 import dataclasses
 import ml_confs as mlc
-from ml_confs.config_containers import InvalidStructureError, check_structure
+from ml_confs.lib import InvalidStructureError, check_structure
 import shutil
 from pathlib import Path
 
@@ -65,14 +65,15 @@ def test_load_save_reload(path: os.PathLike):
     f_name = os.path.basename(path).split('.')[0]
     for ext in ['json', 'yaml', 'yml']:
         tmp_path = tests_path / f'tmp/{f_name}.{ext}'
-        mlc.to_file(tmp_path, configs)
+        configs.to_file(tmp_path)
         loaded_configs = mlc.from_file(tmp_path)
         shutil.rmtree(tests_path / 'tmp/')
         assert dataclasses.asdict(configs) == dataclasses.asdict(loaded_configs)
 
-def test_pprint():
+def test_tabulate():
     configs = mlc.from_dict(valid_dict)
-    mlc.pprint(configs)
+    print("\n") #Formatting
+    configs.tabulate()
 
 def test_frozen():
     with pytest.raises(dataclasses.FrozenInstanceError):

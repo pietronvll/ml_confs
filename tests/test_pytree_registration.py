@@ -1,7 +1,5 @@
-from typing import Any
 import pytest
 import jax
-import jax.numpy as jnp
 import ml_confs as mlc
 from pathlib import Path
 
