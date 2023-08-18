@@ -18,14 +18,14 @@ def test_tree_properties(register_jax_pytree):
             configs.tree_flatten()
 
 def test_tree_flatten_unflatten():
-    configs = mlc.from_file(configs_path, register_jax_pytree=True)
+    configs = mlc.from_file(configs_path)
     leafs, treedef = jax.tree_util.tree_flatten(configs)
     configs_reconstructed = jax.tree_util.tree_unflatten(treedef, leafs)
     assert configs == configs_reconstructed 
 
 @pytest.mark.parametrize('exp', [0.0, 1.0, 2.0, 3.0, 4.0])    
 def test_jit(exp):
-    configs = mlc.from_dict({'exp': exp}, register_jax_pytree=True)
+    configs = mlc.from_dict({'exp': exp})
     def _f(x, cfg):
         return x**cfg.exp
     f = jax.jit(_f)
@@ -33,7 +33,7 @@ def test_jit(exp):
 
 @pytest.mark.parametrize('exp', [0.0, 1.0, 2.0, 3.0, 4.0])    
 def test_jit_grad(exp):
-    configs = mlc.from_dict({'exp': exp}, register_jax_pytree=True)
+    configs = mlc.from_dict({'exp': exp})
     def _f(x, cfg):
         return x**cfg.exp
     f = jax.jit(_f)

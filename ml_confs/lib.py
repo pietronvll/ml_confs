@@ -9,7 +9,7 @@ import re
 import dataclasses
 import types
 from collections.abc import Mapping
-import sys
+from warnings import warn
 
 allowed_types = (int, float, str, bool, type(None))
 allowed_iterables = (list, )
@@ -104,9 +104,10 @@ def check_structure(mapping: Mapping, _ignore_jax_tracers: bool = False):
         if _ignore_jax_tracers:
             try:
                 from jax.core import Tracer
+                if isinstance(value, Tracer):
+                    continue
             except ImportError:
-                raise ImportError('The argument `_ignore_jax_tracers` is not supported without JAX installed')
-            if isinstance(value, Tracer):
+                warn('The argument `_ignore_jax_tracers` will be ingored, as jax is not installed.')
                 continue
         
         error_str = f"The element {key} is of type {type(value)} while it must be one of:\n"
@@ -114,7 +115,7 @@ def check_structure(mapping: Mapping, _ignore_jax_tracers: bool = False):
             error_str += f"\t{t.__name__}\n"
         raise InvalidStructureError(error_str)  
 
-def make_base_config_class(storage: dict, register_jax_pytree: bool = False):
+def make_base_config_class(storage: dict, register_jax_pytree: bool = True):
 
     #JAX pytree compatibility
     if register_jax_pytree:
@@ -142,7 +143,7 @@ def make_base_config_class(storage: dict, register_jax_pytree: bool = False):
             cls = register_pytree_node_class(cls)
             storage['_is_jax_pytree'] = True
         except ImportError:
-            print('Unable to import JAX. The argument `register_jax_pytree` will be ignored.', file=sys.stderr)
+            warn('Unable to import JAX. The argument `register_jax_pytree` will be ignored. To suppress this warning, load the configurations with `register_jax_pytree=False`.')
             cls = types.new_class('LoadedConfigs', (Configs,), {}, exec_body_callback)
             cls = dataclasses.dataclass(cls, frozen=True, eq=False)
             storage['_is_jax_pytree'] = False
@@ -173,7 +174,7 @@ def create_base_dir(path: os.PathLike):
     if not base_path.exists():
         base_path.mkdir(parents=True)
 
-def from_json(path: os.PathLike, register_jax_pytree: bool = False):
+def from_json(path: os.PathLike, register_jax_pytree: bool = True):
     """Load configurations from a JSON file.
 
     Args:
@@ -187,7 +188,7 @@ def from_json(path: os.PathLike, register_jax_pytree: bool = False):
         storage = json.load(f)
     return make_base_config_class(storage, register_jax_pytree)
 
-def from_yaml(path: os.PathLike, register_jax_pytree: bool = False):
+def from_yaml(path: os.PathLike, register_jax_pytree: bool = True):
     """Load configurations from a YAML file.
 
     Args:
@@ -201,7 +202,7 @@ def from_yaml(path: os.PathLike, register_jax_pytree: bool = False):
         storage = yaml.load(f, Loader=loader)
     return make_base_config_class(storage, register_jax_pytree)
 
-def from_dict(storage: dict, register_jax_pytree: bool = False):
+def from_dict(storage: dict, register_jax_pytree: bool = True):
     """Load configurations from a python dictionary.
 
     Args:
@@ -214,7 +215,7 @@ def from_dict(storage: dict, register_jax_pytree: bool = False):
     storage = deepcopy(storage)
     return make_base_config_class(storage, register_jax_pytree)
 
-def from_file(path: os.PathLike, register_jax_pytree: bool = False):
+def from_file(path: os.PathLike, register_jax_pytree: bool = True):
     """Load configurations from a YAML/JSON file.
 
     Args:

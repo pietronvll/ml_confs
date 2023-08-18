@@ -1,6 +1,10 @@
 # Roadmap for `ml_confs`
 The plan is to add functionality to be `JAX`-compatible.
 
+**[Aug 18]**
+
+Made the library into a single file for easier portability. Want to add an hashing function to support configuration versioning and storage.
+
 **[Aug 17]**
 
 The `pytree` registration functionality has been implemented and partially tested. I do not like too much how the using JAX/ not using JAX is handled, make it a better way.

@@ -29,7 +29,8 @@ jax = [
 dev = [
     "pytest",
     "jax",
-    "jaxlib"
+    "jaxlib",
+    "lazydocs"
 ]
 
 [project.urls]

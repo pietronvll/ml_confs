@@ -21,10 +21,10 @@ list_field: [1, 2, 3]
 ```
 To load it we just use:
 ```python
-import ml_confs as mlcfg
+import ml_confs
 
 #Loading configs
-configs = mlcfg.from_file('configs.yml')
+configs = ml_confs.from_file('configs.yml')
 
 #Accessing configs with dot notation
 print(configs.int_field) # >>> 1
@@ -36,10 +36,10 @@ foo(**configs)
 
 
 #Saving configs to json format
-mlcfg.to_file('json_configs_copy.json') #Will create a .json file 
+configs.to_file('json_configs_copy.json') #Will create a .json file 
 ```
 
-One can also pretty print a loaded configuration with `ml_confs.pprint`, which in the previous example would output:
+One can also pretty print a loaded configuration with `configs.tabulate()`, which in the previous example would output:
 ```
 ┏━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
 ┃ Key         ┃ Value     ┃ Type      ┃
@@ -52,14 +52,38 @@ One can also pretty print a loaded configuration with `ml_confs.pprint`, which i
 │ list_field  │ [1, 2, 3] │ list[int] │
 └─────────────┴───────────┴───────────┘
 ```
-## API reference
-<!-- markdownlint-disable -->
-<a href="https://github.com/Pietronvll/ml_confs/tree/main/ml_confs/io_utils.py#L17"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+### JAX Pytree registration
+By default, `ml_confs` will try to register the configuration object as a JAX pytree, so that `configs` can be safely used with JAX transformations.
+```python
+import ml_confs
+import jax
 
-## <kbd>function</kbd> `from_json`
+configs = mlc.from_dict({'exp': 1.5})
+
+@jax.jit 
+def power_fn(x, cfg):
+    return x**cfg.exp
+
+assert f(2.0, configs) == 2.0**exp # This works!
+assert jax.grad(power_fn)(3.0, configs) == 3.0**(exp - 1.0) * exp # This works too!
+```
+ If JAX is not installed the following warning will be displayed:
+
+ `Unable to import JAX. The argument register_jax_pytree will be ignored. To suppress this warning, load the configurations with register_jax_pytree=False.`
+ 
+ If one is not interested in this feature, the warning can be silenced by explicitly setting  `register_jax_pytree` to `False` upon configuration loading.
+
+# API Reference
+
+<!-- markdownlint-disable -->
+
+
+<a href="../../ml_confs/lib.py#L177"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+
+## <kbd>function</kbd> `ml_confs.from_json`
 
 ```python
-from_json(path: PathLike, flax_dataclass: bool = False)
+from_json(path: os.PathLike, register_jax_pytree: bool = True)
 ```
 
 Load configurations from a JSON file. 
@@ -69,7 +93,7 @@ Load configurations from a JSON file.
 **Args:**
  
  - <b>`path`</b> (os.PathLike):  Configuration file path. 
- - <b>`flax_dataclass`</b> (bool, optional):  Returns a flax compatible object. Uses flax.struct.dataclass. Defaults to False. 
+ - <b>`register_jax_pytree`</b> (bool, optional):  Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations.. Defaults to False. 
 
 
 
@@ -80,12 +104,12 @@ Load configurations from a JSON file.
 
 ---
 
-<a href="https://github.com/Pietronvll/ml_confs/tree/main/ml_confs/io_utils.py#L31"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../ml_confs/lib.py#L191"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
-## <kbd>function</kbd> `from_yaml`
+## <kbd>function</kbd> `ml_confs.from_yaml`
 
 ```python
-from_yaml(path: PathLike, flax_dataclass: bool = False)
+from_yaml(path: os.PathLike, register_jax_pytree: bool = True)
 ```
 
 Load configurations from a YAML file. 
@@ -95,7 +119,7 @@ Load configurations from a YAML file.
 **Args:**
  
  - <b>`path`</b> (os.PathLike):  Configuration file path. 
- - <b>`flax_dataclass`</b> (bool, optional):  Returns a flax compatible object. Uses flax.struct.dataclass. Defaults to False. 
+ - <b>`register_jax_pytree`</b> (bool, optional):  Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations.. Defaults to False. 
 
 
 
@@ -106,12 +130,12 @@ Load configurations from a YAML file.
 
 ---
 
-<a href="https://github.com/Pietronvll/ml_confs/tree/main/ml_confs/io_utils.py#L45"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../ml_confs/lib.py#L205"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
-## <kbd>function</kbd> `from_dict`
+## <kbd>function</kbd> `ml_confs.from_dict`
 
 ```python
-from_dict(storage: dict, flax_dataclass: bool = False)
+from_dict(storage: dict, register_jax_pytree: bool = True)
 ```
 
 Load configurations from a python dictionary. 
@@ -121,7 +145,7 @@ Load configurations from a python dictionary.
 **Args:**
  
  - <b>`storage`</b> (dict):  Configuration dictionary. 
- - <b>`flax_dataclass`</b> (bool, optional):  Returns a flax compatible object. Uses flax.struct.dataclass. Defaults to False. 
+ - <b>`register_jax_pytree`</b> (bool, optional):  Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations.. Defaults to False. 
 
 
 
@@ -132,12 +156,12 @@ Load configurations from a python dictionary.
 
 ---
 
-<a href="https://github.com/Pietronvll/ml_confs/tree/main/ml_confs/io_utils.py#L58"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../ml_confs/lib.py#L218"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
-## <kbd>function</kbd> `from_file`
+## <kbd>function</kbd> `ml_confs.from_file`
 
 ```python
-from_file(path: PathLike, flax_dataclass: bool = False)
+from_file(path: os.PathLike, register_jax_pytree: bool = True)
 ```
 
 Load configurations from a YAML/JSON file. 
@@ -147,7 +171,7 @@ Load configurations from a YAML/JSON file.
 **Args:**
  
  - <b>`path`</b> (os.PathLike):  Configuration file path. 
- - <b>`flax_dataclass`</b> (bool, optional):  Returns a flax compatible object. Uses flax.struct.dataclass. Defaults to False. 
+ - <b>`register_jax_pytree`</b> (bool, optional):  Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations.. Defaults to False. 
 
 
 
@@ -156,54 +180,52 @@ Load configurations from a YAML/JSON file.
  - <b>`Configs`</b>:  Instance of the loaded configurations. 
 
 
+
 ---
 
-<a href="https://github.com/Pietronvll/ml_confs/tree/main/ml_confs/io_utils.py#L76"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../ml_confs/lib.py#L20"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
-## <kbd>function</kbd> `to_json`
+## <kbd>class</kbd> `Configs`
+
+
+---
+
+<a href="../../ml_confs/lib.py#L66"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+
+### <kbd>method</kbd> `Configs.tabulate`
 
 ```python
-to_json(path: PathLike, configs: BaseConfigs)
+tabulate()
 ```
 
-Save configurations to a JSON file. 
-
-
-
-**Args:**
- 
- - <b>`path`</b> (os.PathLike):  File path to save the configurations. 
- - <b>`configs`</b> (BaseConfigs):  Instance of the configurations. 
-
+Print the configurations in a tabular format. 
 
 ---
 
-<a href="https://github.com/Pietronvll/ml_confs/tree/main/ml_confs/io_utils.py#L89"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../ml_confs/lib.py#L34"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
-## <kbd>function</kbd> `to_yaml`
+### <kbd>method</kbd> `Configs.to_dict`
 
 ```python
-to_yaml(path: PathLike, configs: BaseConfigs)
+to_dict() → dict
 ```
 
-Save configurations to a YAML file. 
+Export configurations to a python dictionary. 
 
 
 
-**Args:**
+**Returns:**
  
- - <b>`path`</b> (os.PathLike):  File path to save the configurations. 
- - <b>`configs`</b> (BaseConfigs):  Instance of the configurations. 
-
+ - <b>`dict`</b>:  A standard python dictionary containing the configurations. 
 
 ---
 
-<a href="https://github.com/Pietronvll/ml_confs/tree/main/ml_confs/io_utils.py#L102"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../ml_confs/lib.py#L58"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
-## <kbd>function</kbd> `to_file`
+### <kbd>method</kbd> `Configs.to_file`
 
 ```python
-to_file(path: PathLike, configs: BaseConfigs)
+to_file(path: os.PathLike)
 ```
 
 Save configurations to a YAML/JSON file. 
@@ -213,55 +235,44 @@ Save configurations to a YAML/JSON file.
 **Args:**
  
  - <b>`path`</b> (os.PathLike):  File path to save the configurations. 
- - <b>`configs`</b> (BaseConfigs):  Instance of the configurations. 
-
 
 ---
 
-<a href="https://github.com/Pietronvll/ml_confs/tree/main/ml_confs/io_utils.py#L117"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../ml_confs/lib.py#L42"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
-## <kbd>function</kbd> `to_dict`
+### <kbd>method</kbd> `Configs.to_json`
 
 ```python
-to_dict(configs: BaseConfigs) → dict
+to_json(path: os.PathLike)
 ```
 
-Export configurations to a python dictionary. 
+Save configurations to a JSON file. 
 
 
 
 **Args:**
  
- - <b>`configs`</b> (BaseConfigs):  Instance of the configurations. 
-
-
-
-**Returns:**
- 
- - <b>`dict`</b>:  A standard python dictionary containing the configurations. 
-
+ - <b>`path`</b> (os.PathLike):  File path to save the configurations. 
 
 ---
 
-<a href="https://github.com/Pietronvll/ml_confs/tree/main/ml_confs/io_utils.py#L128"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../ml_confs/lib.py#L50"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
-## <kbd>function</kbd> `pprint`
+### <kbd>method</kbd> `Configs.to_yaml`
 
 ```python
-pprint(configs: BaseConfigs)
+to_yaml(path: os.PathLike)
 ```
 
-Pretty print configurations. 
+Save configurations to a YAML file. 
 
 
 
 **Args:**
  
- - <b>`configs`</b> (BaseConfigs):  An instance of the configurations. 
-
-
-
+ - <b>`path`</b> (os.PathLike):  File path to save the configurations. 
 
 ---
 
 _The API reference was automatically generated via [lazydocs](https://github.com/ml-tooling/lazydocs)._
+
