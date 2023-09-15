@@ -1,4 +1,7 @@
-# ML configurations
+<p align = "center">
+  <img src="logo.svg" alt="SVG Image" style="width:50%;"/>
+</p>
+
 A small, highly opinionated `python` tool to handle configurations for machine learning pipelines.
 The library is designed to load configurations from both `json` and `yaml` files, as well as from standard python dictionaries.
 ## Design rules
