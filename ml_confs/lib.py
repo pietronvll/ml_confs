@@ -133,7 +133,7 @@ def check_structure(mapping: Mapping, _ignore_jax_tracers: bool = False):
         raise InvalidStructureError(error_str)
 
 
-def make_base_config_class(storage: dict, register_jax_pytree: bool = True):
+def make_base_config_class(storage: dict, register_jax_pytree: bool = False):
     # JAX pytree compatibility
     if register_jax_pytree:
         _ignore_jax_tracers = True
@@ -201,12 +201,12 @@ def create_base_dir(path: os.PathLike):
         base_path.mkdir(parents=True)
 
 
-def from_json(path: os.PathLike, register_jax_pytree: bool = True):
+def from_json(path: os.PathLike, register_jax_pytree: bool = False):
     """Load configurations from a JSON file.
 
     Args:
         path (os.PathLike): Configuration file path.
-        register_jax_pytree (bool, optional): Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations.. Defaults to False.
+        register_jax_pytree (bool, optional): Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations. Defaults to False.
 
     Returns:
         Configs: Instance of the loaded configurations.
@@ -216,12 +216,12 @@ def from_json(path: os.PathLike, register_jax_pytree: bool = True):
     return make_base_config_class(storage, register_jax_pytree)
 
 
-def from_yaml(path: os.PathLike, register_jax_pytree: bool = True):
+def from_yaml(path: os.PathLike, register_jax_pytree: bool = False):
     """Load configurations from a YAML file.
 
     Args:
         path (os.PathLike): Configuration file path.
-        register_jax_pytree (bool, optional): Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations.. Defaults to False.
+        register_jax_pytree (bool, optional): Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations. Defaults to False.
 
     Returns:
         Configs: Instance of the loaded configurations.
@@ -231,12 +231,12 @@ def from_yaml(path: os.PathLike, register_jax_pytree: bool = True):
     return make_base_config_class(storage, register_jax_pytree)
 
 
-def from_dict(storage: dict, register_jax_pytree: bool = True):
+def from_dict(storage: dict, register_jax_pytree: bool = False):
     """Load configurations from a python dictionary.
 
     Args:
         storage (dict): Configuration dictionary.
-        register_jax_pytree (bool, optional): Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations.. Defaults to False.
+        register_jax_pytree (bool, optional): Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations. Defaults to False.
 
     Returns:
         Configs: Instance of the loaded configurations.
@@ -245,12 +245,12 @@ def from_dict(storage: dict, register_jax_pytree: bool = True):
     return make_base_config_class(storage, register_jax_pytree)
 
 
-def from_file(path: os.PathLike, register_jax_pytree: bool = True):
+def from_file(path: os.PathLike, register_jax_pytree: bool = False):
     """Load configurations from a YAML/JSON file.
 
     Args:
         path (os.PathLike): Configuration file path.
-        register_jax_pytree (bool, optional): Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations.. Defaults to False.
+        register_jax_pytree (bool, optional): Register the configuration as a `JAX` pytree. This allows the configurations to be safely used in `JAX`'s transformations. Defaults to False.
 
     Returns:
         Configs: Instance of the loaded configurations.
